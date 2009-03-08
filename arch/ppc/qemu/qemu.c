@@ -1,0 +1,76 @@
+/*
+ *   Creation Date: <2004/08/28 18:38:22 greg>
+ *   Time-stamp: <2004/08/28 18:38:22 greg>
+ *
+ *	<qemu.c>
+ *
+ *   Copyright (C) 2004, Greg Watson
+ *
+ *   derived from mol.c
+ *
+ *   Copyright (C) 2003, 2004 Samuel Rydh (samuel@ibrium.se)
+ *
+ *   This program is free software; you can redistribute it and/or
+ *   modify it under the terms of the GNU General Public License
+ *   version 2
+ *
+ */
+
+#include "openbios/config.h"
+#include "openbios/kernel.h"
+#include "openbios/nvram.h"
+#include "openbios/bindings.h"
+#include "openbios/drivers.h"
+#include "libc/vsprintf.h"
+#include "libc/string.h"
+#include "libc/byteorder.h"
+#include "qemu/qemu.h"
+#include <stdarg.h>
+
+//#define DUMP_NVRAM
+
+void
+exit( int status __attribute__ ((unused)))
+{
+	for (;;);
+} __attribute__ ((noreturn))
+
+void
+fatal_error( const char *err )
+{
+	printk("Fatal error: %s\n", err );
+	exit(0);
+}
+
+void
+panic( const char *err )
+{
+	printk("Panic: %s\n", err );
+	exit(0);
+}
+
+static int do_indent;
+
+int
+printk( const char *fmt, ... )
+{
+        char *p, buf[1024];
+	va_list args;
+	int i;
+
+	va_start(args, fmt);
+        i = vsnprintf(buf, sizeof(buf), fmt, args);
+	va_end(args);
+
+	for( p=buf; *p; p++ ) {
+		if( *p == '\n' )
+			do_indent = 0;
+		if( do_indent++ == 1 ) {
+			putchar( '>' );
+			putchar( '>' );
+			putchar( ' ' );
+		}
+		putchar( *p );
+	}
+	return i;
+}

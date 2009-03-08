@@ -1,0 +1,45 @@
+HOSTARCH=$(shell config/scripts/archname)
+ODIRS=$(wildcard obj-*)
+TARGETS=$(subst obj-,,$(ODIRS))
+
+all: requirements info build
+
+requirements:
+	@which xsltproc &>/dev/null || ( echo ; echo "Please install libxslt2"; \
+			echo; exit 1 )
+
+info:
+	@echo "Building OpenBIOS on $(HOSTARCH) for $(TARGETS)"
+
+clean:
+	@printf "Cleaning up..."
+	@rm -rf $(ODIRS) forth.dict.core
+	@find . -type f -name "*~" -exec rm \{\} \;
+	@echo " ok"
+
+build:
+	@printf "Building..."
+	@for dir in $(ODIRS); do \
+		$(MAKE) -C $$dir > $$dir/build.log 2>&1 && echo "ok." || \
+		( echo "error:"; tail -15 $$$dir/build.log; exit 1 ) \
+	done
+
+build-verbose:
+	@echo "Building..."
+	@for dir in $(ODIRS); do \
+		$(MAKE) -C $$dir || exit 1; \
+	done
+
+run:
+	@echo "Running..."
+	@$(ODIR)/openbios-unix $(ODIR)/openbios-unix.dict
+
+
+# The following two targets will only work on x86 so far.
+# 
+$(ODIR)/openbios.iso: $(ODIR)/openbios.multiboot $(ODIR)/openbios-x86.dict
+	@mkisofs -input-charset UTF-8 -r -b boot/grub/stage2_eltorito -no-emul-boot \
+	-boot-load-size 4 -boot-info-table -o $@ utils/iso $^
+
+runiso: $(ODIR)/openbios.iso
+	qemu -cdrom $^
