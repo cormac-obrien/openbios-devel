@@ -161,6 +161,16 @@ bootinfo_init_program(void)
 	feval("load-size");
 	size = POP();
 
+	/* Check for a delimiting ASCII EOT, as in Mac OS 9 */
+	current = 0;
+	while (current < size) {
+		if (base[current] == 0x04) {
+			size = current;
+			break;
+		}
+		current++;
+	}
+
 	bootscript = malloc(size);
 	if (bootscript == NULL) {
 		DPRINTF("Can't malloc %d bytes\n", size);
