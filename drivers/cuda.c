@@ -7,7 +7,7 @@
 #include "macio.h"
 #include "cuda.h"
 
-//#define DEBUG_CUDA
+#define DEBUG_CUDA
 #ifdef DEBUG_CUDA
 #define CUDA_DPRINTF(fmt, args...) \
 	do { printk("CUDA - %s: " fmt, __func__ , ##args); } while (0)
@@ -77,7 +77,7 @@ static void cuda_wait_irq (cuda_t *dev)
 {
     int val;
 
-//    CUDA_DPRINTF("\n");
+    CUDA_DPRINTF("\n");
     for(;;) {
         val = cuda_readb(dev, IFR);
         cuda_writeb(dev, IFR, val & 0x7f);
@@ -97,7 +97,7 @@ static int cuda_request (cuda_t *dev, uint8_t pkt_type, const uint8_t *buf,
     cuda_writeb(dev, SR, pkt_type);
     cuda_writeb(dev, B, cuda_readb(dev, B) & ~TIP);
     if (buf) {
-        //CUDA_DPRINTF("Send buf len: %d\n", buf_len);
+        CUDA_DPRINTF("Send buf len: %d\n", buf_len);
         /* send 'buf' */
         for(i = 0; i < buf_len; i++) {
             cuda_wait_irq(dev);
@@ -129,7 +129,7 @@ static int cuda_request (cuda_t *dev, uint8_t pkt_type, const uint8_t *buf,
         cuda_wait_irq(dev);
         cuda_readb(dev, SR);
     }
-//    CUDA_DPRINTF("Got len: %d\n", obuf_len);
+    CUDA_DPRINTF("Got len: %d\n", obuf_len);
 
     return obuf_len;
 }
@@ -141,11 +141,11 @@ static int cuda_adb_req (void *host, const uint8_t *snd_buf, int len,
 {
     uint8_t buffer[CUDA_BUF_SIZE], *pos;
 
- //   CUDA_DPRINTF("len: %d %02x\n", len, snd_buf[0]);
+    CUDA_DPRINTF("len: %d %02x\n", len, snd_buf[0]);
     len = cuda_request(host, ADB_PACKET, snd_buf, len, buffer);
     if (len > 1 && buffer[0] == ADB_PACKET) {
-        pos = buffer + 2;
-        len -= 2;
+        pos = buffer + 3;
+        len -= 3;
     } else {
         pos = buffer + 1;
         len = -1;
