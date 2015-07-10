@@ -144,8 +144,18 @@ static int cuda_adb_req (void *host, const uint8_t *snd_buf, int len,
  //   CUDA_DPRINTF("len: %d %02x\n", len, snd_buf[0]);
     len = cuda_request(host, ADB_PACKET, snd_buf, len, buffer);
     if (len > 1 && buffer[0] == ADB_PACKET) {
-        pos = buffer + 2;
-        len -= 2;
+        /* QEMU's previous model used a 2-byte header where it should use a
+         * 3-byte one, so we check to see what kind of header we ought to use.
+         */
+        if (len > 2 && buffer[2] == snd_buf[0]) {
+            /* Correct 3-byte header */
+            pos = buffer + 3;
+            len -= 3;
+        } else {
+            /* Old 2-byte header */
+            pos = buffer + 2;
+            len -= 2;
+        }
     } else {
         pos = buffer + 1;
         len = -1;
