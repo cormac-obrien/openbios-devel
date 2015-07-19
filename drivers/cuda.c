@@ -58,6 +58,7 @@
 #define CUDA_PACKET     1
 
 /* CUDA commands (2nd byte) */
+#define CUDA_AUTOPOLL			0x01
 #define CUDA_GET_TIME			0x03
 #define CUDA_SET_TIME			0x09
 #define CUDA_POWERDOWN                  0x0a
@@ -147,8 +148,14 @@ static int cuda_adb_req (void *host, const uint8_t *snd_buf, int len,
         pos = buffer + 2;
         len -= 2;
     } else {
-        pos = buffer + 1;
-        len = -1;
+        /* Autopoll packet headers are 3 bytes */
+        if (len > 2 && buffer[1] == CUDA_AUTOPOLL) {
+            pos = buffer + 3;
+            len -= 3;
+        } else {
+            pos = buffer + 1;
+            len = -1;
+        }
     }
     memcpy(rcv_buf, pos, len);
 
