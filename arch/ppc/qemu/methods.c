@@ -31,7 +31,7 @@
 /*	RTAS (run-time abstraction services)				*/
 /************************************************************************/
 
-#ifdef CONFIG_RTAS
+#if 0 // def CONFIG_RTAS
 DECLARE_NODE( rtas, INSTALL_OPEN, 0, "+/rtas" );
 
 /* ( physbase -- rtas_callback ) */
@@ -306,7 +306,7 @@ void
 node_methods_init( const char *cpuname )
 {
 	phandle_t chosen, ph;
-#ifdef CONFIG_RTAS
+#if 0 //def CONFIG_RTAS
 	if (is_newworld()) {
 		REGISTER_NODE( rtas );
 	}
