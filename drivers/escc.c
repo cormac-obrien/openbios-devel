@@ -384,8 +384,10 @@ escc_add_channel(const char *path, const char *node, phys_addr_t addr,
 {
     char buf[64], tty[32];
     phandle_t dnode, aliases;
+#if 0
     int len;
-    cell props[6];
+#endif
+    cell props[10];
     int offset;
     int legacy;
 
@@ -421,19 +423,33 @@ escc_add_channel(const char *path, const char *node, phys_addr_t addr,
     set_property(dnode, "device_type", "serial",
                  strlen("serial") + 1);
 
+#if 0
     snprintf(buf, sizeof(buf), "ch-%s", node);
     len = strlen(buf) + 1;
     snprintf(buf + len, sizeof(buf) - len, "chrp,es%d", esnum);
     set_property(dnode, "compatible", buf, len + 9);
+#else
+    snprintf(buf, sizeof(buf), "chrp,es%d", esnum);
+    set_property(dnode, "compatible", buf, 9);
+#endif
 
     if (legacy) {
         props[0] = IO_ESCC_LEGACY_OFFSET + offset * 0x4;
         props[1] = 0x00000001;
+        props[2] = IO_ESCC_LEGACY_OFFSET + offset * 0x4 + 2;
+        props[3] = 0x00000001;
+        props[4] = IO_ESCC_LEGACY_OFFSET + offset * 0x4 + 6;
+        props[5] = 0x00000001;
+        props[6] = 0x8400;
+        props[7] = 0x00000100;
+        props[8] = 0x8500;
+        props[9] = 0x00000100;
+        set_property(dnode, "reg", (char *)&props, 10 * sizeof(cell));
     } else {
         props[0] = IO_ESCC_OFFSET + offset * 0x20;
         props[1] = 0x00000020;
+        set_property(dnode, "reg", (char *)&props, 2 * sizeof(cell));
     }
-    set_property(dnode, "reg", (char *)&props, 2 * sizeof(cell));
 
     if (legacy) {
         props[0] = addr + IO_ESCC_LEGACY_OFFSET + offset * 0x4;
@@ -447,13 +463,13 @@ escc_add_channel(const char *path, const char *node, phys_addr_t addr,
     OLDWORLD(set_property(dnode, "AAPL,interrupts",
             (char *)&props, 1 * sizeof(cell)));
 
-    if (legacy) {
+    if (1) {
         props[0] = (0x24) + offset;
-        props[1] = 4;
+        props[1] = 1;
         props[2] = 4 + (offset * 2);
-        props[3] = 4;
+        props[3] = 0;
         props[4] = 5 + (offset * 2);
-        props[5] = 4;
+        props[5] = 0;
         NEWWORLD(set_property(dnode, "interrupts",
                  (char *)&props, 6 * sizeof(cell)));
     } else {
@@ -464,6 +480,8 @@ escc_add_channel(const char *path, const char *node, phys_addr_t addr,
     }
 
     set_property(dnode, "built-in", (char *)&props, 0);
+    if (!legacy)
+        set_property(dnode, "slot-names", (char *)&props, 0);
 
 #if 0
 
