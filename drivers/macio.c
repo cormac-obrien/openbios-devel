@@ -188,6 +188,32 @@ openpic_init(const char *path, phys_addr_t addr)
         fword("finish-device");
 }
 
+static void
+heathrow_pic_init(const char *path, phys_addr_t addr)
+{
+        phandle_t dnode;
+        int props[2];
+        char buf[128];
+
+        push_str(path);
+        fword("find-device");
+        fword("new-device");
+        push_str("interrupt-controller");
+        fword("device-name");
+
+        snprintf(buf, sizeof(buf), "%s/interrupt-controller", path);
+        dnode = find_dev(buf);
+        set_property(dnode, "device_type", "interrupt-controller", 21);
+        set_property(dnode, "compatible", "heathrow\0mac-risc", 18);
+        props[0] = __cpu_to_be32(0x10);
+        props[1] = __cpu_to_be32(0x20);
+        set_property(dnode, "reg", (char *)&props, sizeof(props));
+        set_int_property(dnode, "#interrupt-cells", 1);
+        set_property(dnode, "interrupt-controller", "", 0);
+
+        fword("finish-device");
+}
+
 DECLARE_NODE(ob_macio, INSTALL_OPEN, sizeof(int), "Tmac-io");
 
 /* ( str len -- addr ) */
@@ -260,6 +286,7 @@ ob_macio_heathrow_init(const char *path, phys_addr_t addr)
 	cuda_init(path, addr);
 	macio_nvram_init(path, addr);
         escc_init(path, addr);
+        heathrow_pic_init(path, addr);
 	macio_ide_init(path, addr, 2);
 }
 
