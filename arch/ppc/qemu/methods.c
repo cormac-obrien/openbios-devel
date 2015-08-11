@@ -109,11 +109,13 @@ NODE_METHODS( tty ) = {
 
 DECLARE_NODE( ciface, 0, 0, "+/openprom/client-services" );
 
+extern void ide_exit(void);
 /* ( -- ) */
 static void
 ciface_quiesce( unsigned long args[], unsigned long ret[] )
 {
 	usb_exit();
+	ide_exit();
 #if 0
 	unsigned long msr;
 	/* This seems to be the correct thing to do - but I'm not sure */
